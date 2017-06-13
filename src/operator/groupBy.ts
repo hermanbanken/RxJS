@@ -115,6 +115,7 @@ class GroupByOperator<T, K, R> implements Operator<T, GroupedObservable<K, R>> {
  */
 class GroupBySubscriber<T, K, R> extends Subscriber<T> implements RefCountSubscription {
   private groups: Map<K, Subject<T|R>> = null;
+  private subscriptions: Map<K, Subscription> = null;
   public attemptedToUnsubscribe: boolean = false;
   public count: number = 0;
 
@@ -147,6 +148,18 @@ class GroupBySubscriber<T, K, R> extends Subscriber<T> implements RefCountSubscr
 
     let group = groups.get(key);
 
+    let subscriptions = this.subscriptions;
+
+    if (!subscriptions) {
+      subscriptions = this.subscriptions = typeof key === 'string' ? new FastMap() : new Map();
+    }
+
+    let groupSubscription = subscriptions.get(key) || new Subscription();
+
+    if (!subscriptions.get(key)) {
+      subscriptions.set(key, groupSubscription);
+    }
+
     let element: R;
     if (this.elementSelector) {
       try {
@@ -171,7 +184,9 @@ class GroupBySubscriber<T, K, R> extends Subscriber<T> implements RefCountSubscr
           this.error(err);
           return;
         }
-        this.add(duration.subscribe(new GroupDurationSubscriber(key, group, this)));
+
+        groupSubscription.add(duration.subscribe(new GroupDurationSubscriber(key, group, this)));
+        this.add(groupSubscription);
       }
     }
 
@@ -205,6 +220,12 @@ class GroupBySubscriber<T, K, R> extends Subscriber<T> implements RefCountSubscr
   }
 
   removeGroup(key: K): void {
+    let groupSubscription = this.subscriptions.get(key);
+    if (groupSubscription) {
+      this.remove(groupSubscription);
+      groupSubscription.unsubscribe();
+      this.subscriptions.delete(key);
+    }
     this.groups.delete(key);
   }
 
