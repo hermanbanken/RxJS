@@ -261,6 +261,7 @@ describe('Observable.ajax', () => {
       'responseText': 'Wee! I am text!'
     });
 
+    expect(error instanceof Error).to.be.true;
     expect(error instanceof Rx.AjaxError).to.be.true;
     expect(error.stack).to.not.be.undefined;
     expect(error.message).to.equal('ajax error 404');
