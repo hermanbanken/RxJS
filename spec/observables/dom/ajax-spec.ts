@@ -263,7 +263,7 @@ describe('Observable.ajax', () => {
 
     expect(error instanceof Error);
     expect(error instanceof Rx.AjaxError).to.be.true;
-
+    expect(error.stack).to.not.be.undefined;
     expect(error.message).to.equal('ajax error 404');
     expect(error.status).to.equal(404);
   });
