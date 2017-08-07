@@ -5,11 +5,11 @@ import { Subscriber } from '../Subscriber';
 import { Subscription } from '../Subscription';
 import { isScheduler } from '../util/isScheduler';
 
-const selfSelector = <T>(value: T) => value;
-
 export type ConditionFunc<S> = (state: S) => boolean;
 export type IterateFunc<S> = (state: S) => S;
 export type ResultFunc<S, T> = (state: S) => T;
+
+const selfSelector = <S, T>(value: S) => value as any as T;
 
 interface SchedulerState<T, S> {
   needIterate?: boolean;
